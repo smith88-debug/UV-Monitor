@@ -4,12 +4,16 @@ import Charts
 struct UVChartView: View {
     let forecast: UVForecast?
     let measured: [UVForecastPoint]
+    var stationTimeZone: TimeZone = .current
 
     private var chartStartHour: Int { 5 }
     private var chartEndHour: Int { 21 }
 
     private var xDomain: ClosedRange<Date> {
-        let cal = Calendar.current
+        // Use the station's timezone so forecast and measured data align on the
+        // same local-time x-axis regardless of where the device is located.
+        var cal = Calendar.current
+        cal.timeZone = stationTimeZone
         let today = cal.startOfDay(for: Date())
         let start = cal.date(byAdding: .hour, value: chartStartHour, to: today)!
         let end = cal.date(byAdding: .hour, value: chartEndHour, to: today)!

@@ -74,7 +74,9 @@ final class UVDataManager {
                 currentUV = reading.uvIndex
                 currentLevel = UVLevel(index: reading.uvIndex)
                 lastUpdated = Date()
-                storeReading(uvIndex: reading.uvIndex)
+                // Use ARPANSA's reported measurement time, falling back to device time
+                let measurementTime = reading.parsedTimestamp ?? Date()
+                storeReading(uvIndex: reading.uvIndex, timestamp: measurementTime)
             }
         } catch {
             errorMessage = "Unable to fetch UV data"
@@ -91,12 +93,12 @@ final class UVDataManager {
         }
     }
 
-    private func storeReading(uvIndex: Double) {
+    private func storeReading(uvIndex: Double, timestamp: Date) {
         guard let modelContext else { return }
         let reading = UVReading(
             stationId: selectedStation.rawValue,
             uvIndex: uvIndex,
-            timestamp: Date()
+            timestamp: timestamp
         )
         modelContext.insert(reading)
         try? modelContext.save()
@@ -105,7 +107,9 @@ final class UVDataManager {
     private func loadTodayReadings() {
         guard let modelContext else { return }
         let stationId = selectedStation.rawValue
-        let startOfDay = Calendar.current.startOfDay(for: Date())
+        var cal = Calendar.current
+        cal.timeZone = selectedStation.timeZone
+        let startOfDay = cal.startOfDay(for: Date())
 
         let descriptor = FetchDescriptor<UVReading>(
             predicate: #Predicate { reading in

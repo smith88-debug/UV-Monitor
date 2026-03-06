@@ -41,7 +41,8 @@ struct DashboardView: View {
                     // Combined chart
                     UVChartView(
                         forecast: dataManager.forecast,
-                        measured: dataManager.todayReadings
+                        measured: dataManager.todayReadings,
+                        stationTimeZone: dataManager.selectedStation.timeZone
                     )
 
                     // Peak UV info
