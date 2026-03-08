@@ -5,6 +5,8 @@ struct UVChartView: View {
     let forecast: UVForecast?
     let measured: [UVForecastPoint]
     var stationTimeZone: TimeZone = .current
+    var date: Date = Date()
+    var isToday: Bool = true
 
     private var chartStartHour: Int { 5 }
     private var chartEndHour: Int { 21 }
@@ -14,15 +16,23 @@ struct UVChartView: View {
         // same local-time x-axis regardless of where the device is located.
         var cal = Calendar.current
         cal.timeZone = stationTimeZone
-        let today = cal.startOfDay(for: Date())
-        let start = cal.date(byAdding: .hour, value: chartStartHour, to: today)!
-        let end = cal.date(byAdding: .hour, value: chartEndHour, to: today)!
+        let dayStart = cal.startOfDay(for: date)
+        let start = cal.date(byAdding: .hour, value: chartStartHour, to: dayStart)!
+        let end = cal.date(byAdding: .hour, value: chartEndHour, to: dayStart)!
         return start...end
+    }
+
+    private var headerText: String {
+        if isToday { return "Today's UV" }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEE d MMM"
+        formatter.timeZone = stationTimeZone
+        return formatter.string(from: date)
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Today's UV")
+            Text(headerText)
                 .font(.headline)
 
             Chart {
@@ -69,10 +79,12 @@ struct UVChartView: View {
                     .interpolationMethod(.catmullRom)
                 }
 
-                // Current time indicator
-                RuleMark(x: .value("Now", Date()))
-                    .lineStyle(StrokeStyle(lineWidth: 1))
-                    .foregroundStyle(.secondary.opacity(0.5))
+                // Current time indicator (today only)
+                if isToday {
+                    RuleMark(x: .value("Now", Date()))
+                        .lineStyle(StrokeStyle(lineWidth: 1))
+                        .foregroundStyle(.secondary.opacity(0.5))
+                }
             }
             .chartXScale(domain: xDomain)
             .chartYScale(domain: 0...16)

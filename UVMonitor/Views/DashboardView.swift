@@ -24,37 +24,50 @@ struct DashboardView: View {
                         .foregroundStyle(.primary)
                     }
 
+                    // Date navigation
+                    dateNavigationBar
+
                     // UV Index card
                     UVIndexCard(
-                        uvIndex: dataManager.currentUV,
-                        level: dataManager.currentLevel,
-                        lastUpdated: dataManager.lastUpdated
+                        uvIndex: dataManager.isViewingToday ? dataManager.currentUV : dataManager.displayedPeakUV,
+                        level: dataManager.isViewingToday ? dataManager.currentLevel : dataManager.displayedPeakLevel,
+                        lastUpdated: dataManager.isViewingToday ? dataManager.lastUpdated : nil
                     )
 
                     // Protection banner
                     ProtectionBanner(
-                        level: dataManager.currentLevel,
-                        protectionStart: dataManager.forecast?.protectionStartTime,
-                        protectionEnd: dataManager.forecast?.protectionEndTime
+                        level: dataManager.isViewingToday ? dataManager.currentLevel : dataManager.displayedPeakLevel,
+                        protectionStart: dataManager.displayedProtectionStart,
+                        protectionEnd: dataManager.displayedProtectionEnd
                     )
 
                     // Combined chart
                     UVChartView(
-                        forecast: dataManager.forecast,
-                        measured: dataManager.todayReadings,
-                        stationTimeZone: dataManager.selectedStation.timeZone
+                        forecast: dataManager.displayedForecast,
+                        measured: dataManager.displayedReadings,
+                        stationTimeZone: dataManager.selectedStation.timeZone,
+                        date: dataManager.selectedDate,
+                        isToday: dataManager.isViewingToday
                     )
 
                     // Peak UV info
-                    if let forecast = dataManager.forecast, forecast.peakUV > 0 {
+                    if dataManager.displayedPeakUV > 0 {
                         HStack {
-                            Label("Peak forecast: \(String(format: "%.1f", forecast.peakUV))",
+                            Label("Peak forecast: \(String(format: "%.1f", dataManager.displayedPeakUV))",
                                   systemImage: "sun.max.fill")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                             Spacer()
                         }
                         .padding(.horizontal)
+                    }
+
+                    // No data message for historical days
+                    if !dataManager.isViewingToday && dataManager.displayedReadings.isEmpty && dataManager.displayedForecast == nil {
+                        Text("No data available for this day")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .padding()
                     }
 
                     if let error = dataManager.errorMessage {
@@ -69,11 +82,52 @@ struct DashboardView: View {
             .background(Color(.systemGroupedBackground))
             .navigationTitle("UV Monitor")
             .refreshable {
-                await dataManager.refresh()
+                if dataManager.isViewingToday {
+                    await dataManager.refresh()
+                }
             }
             .sheet(isPresented: $showLocationPicker) {
                 LocationPickerView(selectedStation: $dataManager.selectedStation)
             }
         }
+    }
+
+    private var dateNavigationBar: some View {
+        HStack {
+            Button { dataManager.goToPreviousDay() } label: {
+                Image(systemName: "chevron.left")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+            }
+
+            Spacer()
+
+            VStack(spacing: 2) {
+                Text(dateHeaderString)
+                    .font(.headline)
+                if !dataManager.isViewingToday {
+                    Button("Back to Today") { dataManager.goToToday() }
+                        .font(.caption)
+                }
+            }
+
+            Spacer()
+
+            Button { dataManager.goToNextDay() } label: {
+                Image(systemName: "chevron.right")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+            }
+            .disabled(dataManager.isViewingToday)
+        }
+        .padding(.horizontal)
+    }
+
+    private var dateHeaderString: String {
+        if dataManager.isViewingToday { return "Today" }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEE d MMM"
+        formatter.timeZone = dataManager.selectedStation.timeZone
+        return formatter.string(from: dataManager.selectedDate)
     }
 }

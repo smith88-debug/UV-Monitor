@@ -72,11 +72,26 @@
       "name": "Reading Storage",
       "route": null,
       "sidebar_label": null,
-      "description": "SwiftData persistence of UV readings for today's measured data and cleanup of old entries.",
+      "description": "SwiftData persistence of UV readings and forecast snapshots with 30-day retention.",
       "critical_files": [
         "UVMonitor/Models/UVReading.swift",
+        "UVMonitor/Models/StoredForecast.swift",
         "UVMonitor/Services/UVDataManager.swift",
         "UVMonitor/App/UVMonitorApp.swift"
+      ],
+      "api_endpoints": []
+    },
+    {
+      "id": "day-history",
+      "name": "Day History Browsing",
+      "route": null,
+      "sidebar_label": null,
+      "description": "Navigate backward through previous days to view stored UV forecast snapshots and measured readings.",
+      "critical_files": [
+        "UVMonitor/Models/StoredForecast.swift",
+        "UVMonitor/Views/DashboardView.swift",
+        "UVMonitor/Views/UVChartView.swift",
+        "UVMonitor/Services/UVDataManager.swift"
       ],
       "api_endpoints": []
     },
