@@ -17,16 +17,16 @@ actor OpenMeteoService {
         let (data, _) = try await URLSession.shared.data(from: url)
         let response = try JSONDecoder().decode(OpenMeteoResponse.self, from: data)
 
-        let iso8601 = ISO8601DateFormatter()
-        iso8601.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-
-        let fallbackFormatter = DateFormatter()
-        fallbackFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm"
-        fallbackFormatter.timeZone = TimeZone(identifier: response.timezone)
+        // Open-Meteo returns local timestamps like "2026-03-06T12:00" (no TZ suffix)
+        // when timezone=auto is used. Parse them in the station's timezone.
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(identifier: response.timezone)
 
         var points: [UVForecastPoint] = []
         for (timeStr, uvIndex) in zip(response.hourly.time, response.hourly.uvIndex) {
-            if let date = iso8601.date(from: timeStr) ?? fallbackFormatter.date(from: timeStr) {
+            if let date = formatter.date(from: timeStr) {
                 points.append(UVForecastPoint(time: date, uvIndex: uvIndex))
             }
         }

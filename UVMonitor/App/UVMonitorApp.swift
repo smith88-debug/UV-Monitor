@@ -9,7 +9,7 @@ struct UVMonitorApp: App {
 
     init() {
         do {
-            container = try ModelContainer(for: UVReading.self)
+            container = try ModelContainer(for: UVReading.self, StoredForecast.self)
         } catch {
             fatalError("Failed to create ModelContainer: \(error)")
         }

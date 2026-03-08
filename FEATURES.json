@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "description": "Feature manifest for UV Monitor iOS app. See CLAUDE.md for rules on preserving features.",
+  "shared_files": [
+    "UVMonitor/Services/UVDataManager.swift",
+    "UVMonitor/Models/UVStation.swift",
+    "UVMonitor/Models/UVLevel.swift",
+    "UVMonitor/App/UVMonitorApp.swift"
+  ],
+  "features": [
+    {
+      "id": "dashboard",
+      "name": "UV Index Dashboard",
+      "route": "/",
+      "sidebar_label": null,
+      "description": "Main screen showing current UV index, protection advice, forecast chart, and peak UV info.",
+      "critical_files": [
+        "UVMonitor/Views/DashboardView.swift",
+        "UVMonitor/Views/ContentView.swift",
+        "UVMonitor/Views/Components/UVIndexCard.swift",
+        "UVMonitor/Views/Components/ProtectionBanner.swift",
+        "UVMonitor/Services/UVDataManager.swift",
+        "UVMonitor/Models/UVLevel.swift"
+      ],
+      "api_endpoints": [
+        "https://uvdata.arpansa.gov.au/xml/uvvalues.xml"
+      ]
+    },
+    {
+      "id": "forecast-chart",
+      "name": "UV Forecast Chart",
+      "route": null,
+      "sidebar_label": null,
+      "description": "Combined chart showing predicted (Open-Meteo) and measured (ARPANSA) UV data with risk zone bands.",
+      "critical_files": [
+        "UVMonitor/Views/UVChartView.swift",
+        "UVMonitor/Models/UVForecast.swift",
+        "UVMonitor/Services/OpenMeteoService.swift",
+        "UVMonitor/Services/ARPANSAService.swift"
+      ],
+      "api_endpoints": [
+        "https://api.open-meteo.com/v1/forecast",
+        "https://uvdata.arpansa.gov.au/xml/uvvalues.xml"
+      ]
+    },
+    {
+      "id": "location-picker",
+      "name": "Location Selection",
+      "route": null,
+      "sidebar_label": null,
+      "description": "Sheet modal for selecting an ARPANSA station, with nearest-station detection via CoreLocation.",
+      "critical_files": [
+        "UVMonitor/Views/LocationPickerView.swift",
+        "UVMonitor/Models/UVStation.swift"
+      ],
+      "api_endpoints": []
+    },
+    {
+      "id": "notifications",
+      "name": "UV Notifications",
+      "route": null,
+      "sidebar_label": null,
+      "description": "Local push notifications for rising and high UV conditions based on forecast data.",
+      "critical_files": [
+        "UVMonitor/Notifications/UVNotificationManager.swift",
+        "UVMonitor/Models/UVForecast.swift"
+      ],
+      "api_endpoints": []
+    },
+    {
+      "id": "data-persistence",
+      "name": "Reading Storage",
+      "route": null,
+      "sidebar_label": null,
+      "description": "SwiftData persistence of UV readings and forecast snapshots with 30-day retention.",
+      "critical_files": [
+        "UVMonitor/Models/UVReading.swift",
+        "UVMonitor/Models/StoredForecast.swift",
+        "UVMonitor/Services/UVDataManager.swift",
+        "UVMonitor/App/UVMonitorApp.swift"
+      ],
+      "api_endpoints": []
+    },
+    {
+      "id": "day-history",
+      "name": "Day History Browsing",
+      "route": null,
+      "sidebar_label": null,
+      "description": "Navigate backward through previous days to view stored UV forecast snapshots and measured readings.",
+      "critical_files": [
+        "UVMonitor/Models/StoredForecast.swift",
+        "UVMonitor/Views/DashboardView.swift",
+        "UVMonitor/Views/UVChartView.swift",
+        "UVMonitor/Services/UVDataManager.swift"
+      ],
+      "api_endpoints": []
+    },
+    {
+      "id": "background-refresh",
+      "name": "Background Refresh",
+      "route": null,
+      "sidebar_label": null,
+      "description": "BGTaskScheduler-based background UV data refresh every 15 minutes.",
+      "critical_files": [
+        "UVMonitor/App/UVMonitorApp.swift",
+        "UVMonitor/Services/UVDataManager.swift"
+      ],
+      "api_endpoints": [
+        "https://uvdata.arpansa.gov.au/xml/uvvalues.xml",
+        "https://api.open-meteo.com/v1/forecast"
+      ]
+    }
+  ]
+}

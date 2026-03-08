@@ -66,6 +66,30 @@ enum UVStation: String, CaseIterable, Identifiable, Codable {
         }
     }
 
+    var timeZone: TimeZone {
+        switch self {
+        case .perth:
+            TimeZone(identifier: "Australia/Perth")!
+        case .darwin:
+            TimeZone(identifier: "Australia/Darwin")!
+        case .adelaide:
+            TimeZone(identifier: "Australia/Adelaide")!
+        case .brisbane, .goldCoast, .emerald, .townsville:
+            TimeZone(identifier: "Australia/Brisbane")!
+        case .sydney, .canberra, .newcastle:
+            TimeZone(identifier: "Australia/Sydney")!
+        case .melbourne:
+            TimeZone(identifier: "Australia/Melbourne")!
+        case .kingston:
+            TimeZone(identifier: "Australia/Hobart")!
+        case .aliceSprings:
+            TimeZone(identifier: "Australia/Darwin")!
+        case .casey, .davis, .mawson, .macquarieIsland:
+            // Antarctic stations – use UTC as a sensible default
+            TimeZone(identifier: "UTC")!
+        }
+    }
+
     /// Australian mainland/city stations (excludes Antarctic research stations)
     static var australianStations: [UVStation] {
         [.adelaide, .aliceSprings, .brisbane, .canberra, .darwin, .emerald,

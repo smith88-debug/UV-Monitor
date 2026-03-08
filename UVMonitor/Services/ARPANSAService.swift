@@ -7,6 +7,37 @@ struct ARPANSAReading {
     let date: String
     let utcDateTime: String
     let status: String
+
+    /// Parses the ARPANSA utcDateTime string into a Date.
+    /// Tries common ARPANSA formats: "yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd HH:mm:ss",
+    /// "dd MMM yyyy HH:mm:ss", and ISO 8601 with 'Z' suffix.
+    var parsedTimestamp: Date? {
+        let trimmed = utcDateTime.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        // Try ISO 8601 with Z suffix first (e.g. "2026-03-06T05:53:00Z")
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime]
+        if let d = iso.date(from: trimmed) { return d }
+
+        // Common ARPANSA formats (all interpreted as UTC)
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(identifier: "UTC")
+
+        for fmt in [
+            "yyyy-MM-dd'T'HH:mm:ss",
+            "yyyy-MM-dd'T'HH:mm",
+            "yyyy-MM-dd HH:mm:ss",
+            "yyyy-MM-dd HH:mm",
+            "dd MMM yyyy HH:mm:ss",
+            "dd/MM/yyyy HH:mm:ss",
+        ] {
+            formatter.dateFormat = fmt
+            if let d = formatter.date(from: trimmed) { return d }
+        }
+        return nil
+    }
 }
 
 actor ARPANSAService {
