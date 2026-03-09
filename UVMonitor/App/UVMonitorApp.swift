@@ -9,7 +9,15 @@ struct UVMonitorApp: App {
 
     init() {
         do {
-            container = try ModelContainer(for: UVReading.self, StoredForecast.self)
+            let schema = Schema([UVReading.self, StoredForecast.self])
+            let groupURL = FileManager.default.containerURL(
+                forSecurityApplicationGroupIdentifier: "group.com.uvmonitor.app"
+            )
+            let config = ModelConfiguration(
+                schema: schema,
+                url: groupURL?.appending(path: "UVMonitor.store") ?? URL.applicationSupportDirectory.appending(path: "UVMonitor.store")
+            )
+            container = try ModelContainer(for: schema, configurations: [config])
         } catch {
             fatalError("Failed to create ModelContainer: \(error)")
         }

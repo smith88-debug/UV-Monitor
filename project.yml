@@ -21,11 +21,18 @@ targets:
         UISupportedInterfaceOrientations~iphone:
           - UIInterfaceOrientationPortrait
         CFBundleDisplayName: "UV Monitor"
+        BGTaskSchedulerPermittedIdentifiers:
+          - com.uvmonitor.app.uvrefresh
         NSAppTransportSecurity:
           NSExceptionDomains:
             api.open-meteo.com:
               NSExceptionAllowsInsecureHTTPLoads: false
               NSExceptionMinimumTLSVersion: TLSv1.0
+    entitlements:
+      path: UVMonitor/UVMonitor.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.uvmonitor.app
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.uvmonitor.app
   UVMonitorTests:

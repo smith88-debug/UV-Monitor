@@ -30,6 +30,17 @@ struct UVChartView: View {
         return formatter.string(from: date)
     }
 
+    private var visibleForecast: [UVForecastPoint] {
+        guard let forecast else { return [] }
+        let domain = xDomain
+        return forecast.points.filter { domain.contains($0.time) }
+    }
+
+    private var visibleMeasured: [UVForecastPoint] {
+        let domain = xDomain
+        return measured.filter { domain.contains($0.time) }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(headerText)
@@ -54,21 +65,19 @@ struct UVChartView: View {
                     }
 
                 // Forecast line (dashed)
-                if let forecast {
-                    ForEach(forecast.points) { point in
-                        LineMark(
-                            x: .value("Time", point.time),
-                            y: .value("UV", point.uvIndex),
-                            series: .value("Type", "Predicted")
-                        )
-                        .foregroundStyle(.blue.opacity(0.7))
-                        .lineStyle(StrokeStyle(lineWidth: 2, dash: [6, 4]))
-                        .interpolationMethod(.catmullRom)
-                    }
+                ForEach(visibleForecast) { point in
+                    LineMark(
+                        x: .value("Time", point.time),
+                        y: .value("UV", point.uvIndex),
+                        series: .value("Type", "Predicted")
+                    )
+                    .foregroundStyle(.blue.opacity(0.7))
+                    .lineStyle(StrokeStyle(lineWidth: 2, dash: [6, 4]))
+                    .interpolationMethod(.catmullRom)
                 }
 
                 // Measured line (solid)
-                ForEach(measured) { point in
+                ForEach(visibleMeasured) { point in
                     LineMark(
                         x: .value("Time", point.time),
                         y: .value("UV", point.uvIndex),

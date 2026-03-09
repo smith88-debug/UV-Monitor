@@ -109,10 +109,13 @@ final class UVDataManager {
                 currentUV = reading.uvIndex
                 currentLevel = UVLevel(index: reading.uvIndex)
                 lastUpdated = Date()
-                // Use ARPANSA's reported measurement time, falling back to device time
                 let measurementTime = reading.parsedTimestamp ?? Date()
                 storeReading(uvIndex: reading.uvIndex, timestamp: measurementTime)
             }
+        } catch is CancellationError {
+            // Expected when a new refresh supersedes an in-flight one
+        } catch where (error as? URLError)?.code == .cancelled {
+            // URLSession cancellation — also expected
         } catch {
             errorMessage = "UV fetch failed: \(error.localizedDescription)"
         }
@@ -121,6 +124,10 @@ final class UVDataManager {
     private func fetchForecast() async {
         do {
             forecast = try await openMeteoService.fetchForecast(for: selectedStation.coordinate)
+        } catch is CancellationError {
+            // Expected
+        } catch where (error as? URLError)?.code == .cancelled {
+            // Expected
         } catch {
             if errorMessage == nil {
                 errorMessage = "Forecast failed: \(error.localizedDescription)"
