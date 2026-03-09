@@ -6,19 +6,34 @@ options:
   xcodeVersion: "15.0"
 settings:
   SWIFT_VERSION: "5.9"
-  GENERATE_INFOPLIST_FILE: YES
-  INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "UVMonitor uses your location to find the nearest UV monitoring station."
-  INFOPLIST_KEY_BGTaskSchedulerPermittedIdentifiers: "$(PRODUCT_BUNDLE_IDENTIFIER).uvrefresh"
 targets:
   UVMonitor:
     type: application
     platform: iOS
     sources:
       - UVMonitor
+    info:
+      path: UVMonitor/Info.plist
+      properties:
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations~iphone:
+          - UIInterfaceOrientationPortrait
+        CFBundleDisplayName: "UV Monitor"
+        NSAppTransportSecurity:
+          NSExceptionDomains:
+            api.open-meteo.com:
+              NSExceptionAllowsInsecureHTTPLoads: false
+              NSExceptionMinimumTLSVersion: TLSv1.0
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.uvmonitor.app
-      INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
-      INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
-      INFOPLIST_KEY_UILaunchScreen_Generation: YES
-      INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait"
-      INFOPLIST_KEY_CFBundleDisplayName: "UV Monitor"
+  UVMonitorTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - UVMonitorTests
+    dependencies:
+      - target: UVMonitor
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.uvmonitor.app.tests

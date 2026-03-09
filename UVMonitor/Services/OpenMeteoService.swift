@@ -35,7 +35,7 @@ actor OpenMeteoService {
     }
 }
 
-private struct OpenMeteoResponse: Decodable {
+struct OpenMeteoResponse: Decodable {
     let timezone: String
     let hourly: HourlyData
 

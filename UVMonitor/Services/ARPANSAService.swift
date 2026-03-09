@@ -45,8 +45,7 @@ actor ARPANSAService {
 
     func fetchCurrentReadings() async throws -> [String: ARPANSAReading] {
         let (data, _) = try await URLSession.shared.data(from: url)
-        let parser = ARPANSAXMLParser(data: data)
-        return parser.parse()
+        return ARPANSAXMLParser.parse(data: data)
     }
 
     func fetchReading(for station: UVStation) async throws -> ARPANSAReading? {
@@ -55,9 +54,18 @@ actor ARPANSAService {
     }
 }
 
-private final class ARPANSAXMLParser: NSObject, XMLParserDelegate {
-    private let data: Data
-    private var readings: [String: ARPANSAReading] = [:]
+enum ARPANSAXMLParser {
+    static func parse(data: Data) -> [String: ARPANSAReading] {
+        let delegate = ParserDelegate()
+        let parser = XMLParser(data: data)
+        parser.delegate = delegate
+        parser.parse()
+        return delegate.readings
+    }
+}
+
+private final class ParserDelegate: NSObject, XMLParserDelegate {
+    var readings: [String: ARPANSAReading] = [:]
 
     private var currentLocationId = ""
     private var currentElement = ""
@@ -67,17 +75,6 @@ private final class ARPANSAXMLParser: NSObject, XMLParserDelegate {
     private var currentDate = ""
     private var currentUtcDateTime = ""
     private var currentStatus = ""
-
-    init(data: Data) {
-        self.data = data
-    }
-
-    func parse() -> [String: ARPANSAReading] {
-        let parser = XMLParser(data: data)
-        parser.delegate = self
-        parser.parse()
-        return readings
-    }
 
     func parser(_ parser: XMLParser, didStartElement elementName: String,
                 namespaceURI: String?, qualifiedName: String?,

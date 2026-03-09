@@ -114,7 +114,7 @@ final class UVDataManager {
                 storeReading(uvIndex: reading.uvIndex, timestamp: measurementTime)
             }
         } catch {
-            errorMessage = "Unable to fetch UV data"
+            errorMessage = "UV fetch failed: \(error.localizedDescription)"
         }
     }
 
@@ -123,7 +123,7 @@ final class UVDataManager {
             forecast = try await openMeteoService.fetchForecast(for: selectedStation.coordinate)
         } catch {
             if errorMessage == nil {
-                errorMessage = "Unable to fetch forecast"
+                errorMessage = "Forecast failed: \(error.localizedDescription)"
             }
         }
     }
