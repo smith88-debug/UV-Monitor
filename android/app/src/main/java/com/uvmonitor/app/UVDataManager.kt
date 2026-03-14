@@ -17,6 +17,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Date
@@ -58,6 +59,8 @@ class UVDataManager(application: Application) : AndroidViewModel(application) {
 
     val isViewingToday: Boolean
         get() = _viewingDate.value == todayDateMillis()
+
+    val isViewingTodayFlow = _viewingDate.map { it == todayDateMillis() }
 
     init {
         refreshData()

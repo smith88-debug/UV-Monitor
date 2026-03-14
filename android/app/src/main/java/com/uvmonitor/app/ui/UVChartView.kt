@@ -208,11 +208,23 @@ private fun LegendItem(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(10.dp)
-                .background(color, CircleShape)
-        )
+        if (dashed) {
+            Canvas(modifier = Modifier.size(width = 14.dp, height = 10.dp)) {
+                drawLine(
+                    color = color,
+                    start = Offset(0f, size.height / 2),
+                    end = Offset(size.width, size.height / 2),
+                    strokeWidth = 2.dp.toPx(),
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 3.dp.toPx()))
+                )
+            }
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(10.dp)
+                    .background(color, CircleShape)
+            )
+        }
         Text(
             text = label,
             fontSize = 12.sp,

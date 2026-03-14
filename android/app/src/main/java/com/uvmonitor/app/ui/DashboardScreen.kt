@@ -59,7 +59,7 @@ fun DashboardScreen(viewModel: UVDataManager) {
 
     var showLocationPicker by remember { mutableStateOf(false) }
 
-    val isToday = viewModel.isViewingToday
+    val isToday by viewModel.isViewingTodayFlow.collectAsState(initial = true)
     val level = UVLevel.fromUVIndex(currentUV ?: 0.0)
 
     if (showLocationPicker) {

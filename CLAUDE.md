@@ -1,4 +1,6 @@
-# Claude Code Instructions
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
@@ -8,6 +10,37 @@ UV Monitor is a dual-platform mobile app (iOS + Android) for monitoring UV index
 - **Android**: Jetpack Compose app in `android/`, built with Gradle
 
 Both platforms share the same features, API endpoints, and station data. When adding or modifying a feature, apply changes to **both** iOS and Android.
+
+## Build & Test Commands
+
+**iOS:**
+```bash
+xcodebuild -project UVMonitor.xcodeproj -scheme UVMonitor -sdk iphonesimulator build
+xcodebuild -project UVMonitor.xcodeproj -scheme UVMonitor -sdk iphonesimulator test
+xcodegen generate  # regenerate Xcode project after editing project.yml
+```
+
+**Android:**
+```bash
+cd android && ./gradlew assembleDebug
+cd android && ./gradlew test
+```
+
+**Feature validation (run before committing):**
+```bash
+python scripts/validate-features.py
+```
+
+## Architecture
+
+Both platforms follow the same architecture with platform-specific implementations:
+
+- **UVDataManager** is the single source of truth for all app state. iOS: `@Observable @MainActor` class. Android: `AndroidViewModel` with `StateFlow`. All views bind directly to this manager.
+- **Services are isolated**: `ARPANSAService` (XML via XMLParser/XmlPullParser) and `OpenMeteoService` (JSON) run concurrently — Swift `actor`s on iOS, `Dispatchers.IO` coroutines on Android.
+- **Data flow**: App entry point → UVDataManager → Services (ARPANSA + OpenMeteo) → persistence (SwiftData / Room) → Views.
+- **Polling**: UVDataManager runs a 5-minute foreground polling timer. Background refresh runs every 15 minutes via BGTaskScheduler (iOS) / WorkManager (Android).
+- **Timezone handling**: Each `UVStation` enum case carries its own `TimeZone`. All date math (chart x-axis, day boundaries, history queries) uses station-local time.
+- **iOS tests** use the Swift Testing framework (`@Test`, `@Suite`, `#expect`) — **not** XCTest.
 
 ## Feature Preservation (CRITICAL)
 
@@ -75,24 +108,3 @@ When modifying features, always update both platforms:
 Both platforms consume the same APIs:
 - **ARPANSA**: `https://uvdata.arpansa.gov.au/xml/uvvalues.xml` (XML, real-time UV)
 - **Open-Meteo**: `https://api.open-meteo.com/v1/forecast` (JSON, hourly UV forecast)
-
-## Defect Logging
-
-GitHub Issues are the **primary tracker** for defects. Local defect files are supplementary references.
-
-When the user reports a bug, defect, or broken behavior:
-
-1. **Get the next ID** from `defects/DEFECT_LOG.md` (see "Next ID" in Metrics).
-2. **Create a GitHub issue first** using `gh issue create`:
-   - **Title**: `DEF-{NNN}: <short description>`
-   - **Labels**: `bug`
-   - **Body**: Symptoms, Root Cause, Fix Plan (or "TBD"), Linked Defect path
-3. **Create a local defect file** `defects/DEF-{NNN}.md` with the GitHub issue URL and key details.
-   Use existing `DEF-*.md` files as format examples.
-4. **Update `defects/DEFECT_LOG.md`**:
-   - Add a row to the Recent Defects table with the GitHub issue link
-   - Update the Metrics (total, open count, next ID)
-   - If the table exceeds 5 entries, move the oldest to `defects/DEFECT_ARCHIVE.md`
-5. **Status lifecycle**: OPEN → FIXED → VERIFIED → CLOSED
-   - When status changes, comment on the GitHub issue and close it at CLOSED
-6. When writing tests that cover a defect, update status to VERIFIED in both the local file and GitHub issue.

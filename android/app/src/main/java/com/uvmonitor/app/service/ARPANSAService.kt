@@ -48,30 +48,29 @@ class ARPANSAService {
         val parser = factory.newPullParser()
         parser.setInput(StringReader(xml))
 
-        var inLocation = false
-        var currentName: String? = null
+        var inTargetLocation = false
         var currentIndex: Double? = null
         var currentStatus: String? = null
         var currentDateTime: String? = null
         var currentTag = ""
+        var locationId: String? = null
 
         while (parser.eventType != XmlPullParser.END_DOCUMENT) {
             when (parser.eventType) {
                 XmlPullParser.START_TAG -> {
                     currentTag = parser.name
                     if (currentTag == "location") {
-                        inLocation = true
-                        currentName = null
+                        locationId = parser.getAttributeValue(null, "id")
+                        inTargetLocation = locationId?.equals(station.displayName, ignoreCase = true) == true
                         currentIndex = null
                         currentStatus = null
                         currentDateTime = null
                     }
                 }
                 XmlPullParser.TEXT -> {
-                    if (inLocation) {
+                    if (inTargetLocation) {
                         val text = parser.text.trim()
                         when (currentTag) {
-                            "name" -> currentName = text
                             "index" -> currentIndex = text.toDoubleOrNull()
                             "status" -> currentStatus = text
                             "utcdatetime" -> currentDateTime = text
@@ -79,18 +78,17 @@ class ARPANSAService {
                     }
                 }
                 XmlPullParser.END_TAG -> {
-                    if (parser.name == "location" && inLocation) {
-                        inLocation = false
-                        if (currentName?.equals(station.displayName, ignoreCase = true) == true &&
-                            currentIndex != null) {
+                    if (parser.name == "location" && inTargetLocation) {
+                        if (currentIndex != null) {
                             val date = currentDateTime?.let { parseDateTime(it) }
                             return ARPANSAReading(
-                                stationName = currentName,
+                                stationName = station.displayName,
                                 uvIndex = currentIndex,
                                 dateTime = date,
                                 status = currentStatus ?: ""
                             )
                         }
+                        inTargetLocation = false
                     }
                     currentTag = ""
                 }

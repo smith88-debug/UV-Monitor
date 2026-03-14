@@ -44,3 +44,4 @@ targets:
       - target: UVMonitor
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.uvmonitor.app.tests
+      GENERATE_INFOPLIST_FILE: YES
