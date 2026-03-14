@@ -1,11 +1,15 @@
 {
-  "version": 1,
-  "description": "Feature manifest for UV Monitor iOS app. See CLAUDE.md for rules on preserving features.",
+  "version": 2,
+  "description": "Feature manifest for UV Monitor (iOS + Android). See CLAUDE.md for rules on preserving features.",
   "shared_files": [
     "UVMonitor/Services/UVDataManager.swift",
     "UVMonitor/Models/UVStation.swift",
     "UVMonitor/Models/UVLevel.swift",
-    "UVMonitor/App/UVMonitorApp.swift"
+    "UVMonitor/App/UVMonitorApp.swift",
+    "android/app/src/main/java/com/uvmonitor/app/UVDataManager.kt",
+    "android/app/src/main/java/com/uvmonitor/app/model/UVStation.kt",
+    "android/app/src/main/java/com/uvmonitor/app/model/UVLevel.kt",
+    "android/app/src/main/java/com/uvmonitor/app/UVMonitorApp.kt"
   ],
   "features": [
     {
@@ -20,7 +24,12 @@
         "UVMonitor/Views/Components/UVIndexCard.swift",
         "UVMonitor/Views/Components/ProtectionBanner.swift",
         "UVMonitor/Services/UVDataManager.swift",
-        "UVMonitor/Models/UVLevel.swift"
+        "UVMonitor/Models/UVLevel.swift",
+        "android/app/src/main/java/com/uvmonitor/app/ui/DashboardScreen.kt",
+        "android/app/src/main/java/com/uvmonitor/app/ui/components/UVIndexCard.kt",
+        "android/app/src/main/java/com/uvmonitor/app/ui/components/ProtectionBanner.kt",
+        "android/app/src/main/java/com/uvmonitor/app/UVDataManager.kt",
+        "android/app/src/main/java/com/uvmonitor/app/model/UVLevel.kt"
       ],
       "api_endpoints": [
         "https://uvdata.arpansa.gov.au/xml/uvvalues.xml"
@@ -36,7 +45,11 @@
         "UVMonitor/Views/UVChartView.swift",
         "UVMonitor/Models/UVForecast.swift",
         "UVMonitor/Services/OpenMeteoService.swift",
-        "UVMonitor/Services/ARPANSAService.swift"
+        "UVMonitor/Services/ARPANSAService.swift",
+        "android/app/src/main/java/com/uvmonitor/app/ui/UVChartView.kt",
+        "android/app/src/main/java/com/uvmonitor/app/model/UVForecast.kt",
+        "android/app/src/main/java/com/uvmonitor/app/service/OpenMeteoService.kt",
+        "android/app/src/main/java/com/uvmonitor/app/service/ARPANSAService.kt"
       ],
       "api_endpoints": [
         "https://api.open-meteo.com/v1/forecast",
@@ -48,10 +61,12 @@
       "name": "Location Selection",
       "route": null,
       "sidebar_label": null,
-      "description": "Sheet modal for selecting an ARPANSA station, with nearest-station detection via CoreLocation.",
+      "description": "Screen for selecting an ARPANSA station, with nearest-station detection via device location.",
       "critical_files": [
         "UVMonitor/Views/LocationPickerView.swift",
-        "UVMonitor/Models/UVStation.swift"
+        "UVMonitor/Models/UVStation.swift",
+        "android/app/src/main/java/com/uvmonitor/app/ui/LocationPickerScreen.kt",
+        "android/app/src/main/java/com/uvmonitor/app/model/UVStation.kt"
       ],
       "api_endpoints": []
     },
@@ -63,7 +78,9 @@
       "description": "Local push notifications for rising and high UV conditions based on forecast data.",
       "critical_files": [
         "UVMonitor/Notifications/UVNotificationManager.swift",
-        "UVMonitor/Models/UVForecast.swift"
+        "UVMonitor/Models/UVForecast.swift",
+        "android/app/src/main/java/com/uvmonitor/app/notification/UVNotificationManager.kt",
+        "android/app/src/main/java/com/uvmonitor/app/model/UVForecast.kt"
       ],
       "api_endpoints": []
     },
@@ -72,12 +89,16 @@
       "name": "Reading Storage",
       "route": null,
       "sidebar_label": null,
-      "description": "SwiftData persistence of UV readings and forecast snapshots with 30-day retention.",
+      "description": "Persistent storage of UV readings and forecast snapshots with 30-day retention.",
       "critical_files": [
         "UVMonitor/Models/UVReading.swift",
         "UVMonitor/Models/StoredForecast.swift",
         "UVMonitor/Services/UVDataManager.swift",
-        "UVMonitor/App/UVMonitorApp.swift"
+        "UVMonitor/App/UVMonitorApp.swift",
+        "android/app/src/main/java/com/uvmonitor/app/data/UVReadingEntity.kt",
+        "android/app/src/main/java/com/uvmonitor/app/data/StoredForecastEntity.kt",
+        "android/app/src/main/java/com/uvmonitor/app/data/UVDao.kt",
+        "android/app/src/main/java/com/uvmonitor/app/data/AppDatabase.kt"
       ],
       "api_endpoints": []
     },
@@ -91,7 +112,11 @@
         "UVMonitor/Models/StoredForecast.swift",
         "UVMonitor/Views/DashboardView.swift",
         "UVMonitor/Views/UVChartView.swift",
-        "UVMonitor/Services/UVDataManager.swift"
+        "UVMonitor/Services/UVDataManager.swift",
+        "android/app/src/main/java/com/uvmonitor/app/data/StoredForecastEntity.kt",
+        "android/app/src/main/java/com/uvmonitor/app/ui/DashboardScreen.kt",
+        "android/app/src/main/java/com/uvmonitor/app/ui/UVChartView.kt",
+        "android/app/src/main/java/com/uvmonitor/app/UVDataManager.kt"
       ],
       "api_endpoints": []
     },
@@ -100,10 +125,12 @@
       "name": "Background Refresh",
       "route": null,
       "sidebar_label": null,
-      "description": "BGTaskScheduler-based background UV data refresh every 15 minutes.",
+      "description": "Background UV data refresh every 15 minutes (BGTaskScheduler on iOS, WorkManager on Android).",
       "critical_files": [
         "UVMonitor/App/UVMonitorApp.swift",
-        "UVMonitor/Services/UVDataManager.swift"
+        "UVMonitor/Services/UVDataManager.swift",
+        "android/app/src/main/java/com/uvmonitor/app/worker/UVRefreshWorker.kt",
+        "android/app/src/main/java/com/uvmonitor/app/UVMonitorApp.kt"
       ],
       "api_endpoints": [
         "https://uvdata.arpansa.gov.au/xml/uvvalues.xml",

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">UV Monitor</string>
+    <string name="notification_channel_id">uv_alerts</string>
+    <string name="notification_channel_name">UV Alerts</string>
+    <string name="notification_channel_description">Notifications for UV index warnings</string>
+</resources>

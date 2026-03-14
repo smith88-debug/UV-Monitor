@@ -1,10 +1,19 @@
 # Claude Code Instructions
 
+## Project Overview
+
+UV Monitor is a dual-platform mobile app (iOS + Android) for monitoring UV index levels across Australian ARPANSA stations. It shows real-time UV readings, hourly forecasts, protection advice, and 30-day history.
+
+- **iOS**: SwiftUI app in the root directory (`UVMonitor/`), built with XCGen (`project.yml`)
+- **Android**: Jetpack Compose app in `android/`, built with Gradle
+
+Both platforms share the same features, API endpoints, and station data. When adding or modifying a feature, apply changes to **both** iOS and Android.
+
 ## Feature Preservation (CRITICAL)
 
 This project uses a **feature manifest** (`FEATURES.json`) that declares every key functional
-requirement — routes, sidebar links, critical files, and API endpoints. A previous AI session
-accidentally deleted an entire feature (Processing Queue) by rewriting shared files without
+requirement — routes, critical files, and API endpoints. A previous AI session
+accidentally deleted an entire feature by rewriting shared files without
 awareness of existing functionality. These rules exist to prevent that from happening again.
 
 ### Rules
@@ -14,33 +23,58 @@ awareness of existing functionality. These rules exist to prevent that from happ
 
 2. **Never use the Write tool on shared files.** The following files are modified by many features
    and must only be edited with the Edit tool (additive changes, not full rewrites):
-   - `frontend/src/api/types.ts`
-   - `frontend/src/api/images.ts`
-   - `frontend/src/App.tsx`
-   - `frontend/src/components/layout/Sidebar.tsx`
-   - `backend/app/main.py`
 
-3. **When modifying shared files**, first Read the current file and preserve ALL existing:
-   - Imports and exports in `types.ts`
-   - Routes in `App.tsx`
-   - Nav items in `Sidebar.tsx`
-   - Router registrations in `main.py`
+   **iOS shared files:**
+   - `UVMonitor/Services/UVDataManager.swift`
+   - `UVMonitor/Models/UVStation.swift`
+   - `UVMonitor/Models/UVLevel.swift`
+   - `UVMonitor/App/UVMonitorApp.swift`
+
+   **Android shared files:**
+   - `android/app/src/main/java/com/uvmonitor/app/UVDataManager.kt`
+   - `android/app/src/main/java/com/uvmonitor/app/model/UVStation.kt`
+   - `android/app/src/main/java/com/uvmonitor/app/model/UVLevel.kt`
+   - `android/app/src/main/java/com/uvmonitor/app/UVMonitorApp.kt`
+
+3. **When modifying shared files**, first Read the current file and preserve ALL existing
+   functionality on both platforms.
 
 4. **Run feature validation before committing**: `python scripts/validate-features.py`
    If it fails, stop and fix the issue — do not commit broken features.
 
 5. **When adding a new feature**, add a corresponding entry to `FEATURES.json` with:
-   - `id`, `name`, `route` (if applicable), `sidebar_label` (if applicable)
-   - `critical_files` — every file that, if deleted, would break the feature
+   - `id`, `name`, `description`
+   - `critical_files` — files for **both** iOS and Android that, if deleted, would break the feature
    - `api_endpoints` — every backend endpoint the feature depends on
 
 6. **When intentionally removing a feature**, update `FEATURES.json` first (remove the entry),
-   then remove the code. Never the other way around.
+   then remove the code from **both platforms**. Never the other way around.
 
 ### Pre-commit Hook
 
 A git pre-commit hook runs `python scripts/validate-features.py --quiet` automatically.
 If validation fails, the commit is blocked. Do not bypass this with `--no-verify`.
+
+## Dual-Platform Development
+
+When modifying features, always update both platforms:
+
+| iOS (Swift/SwiftUI) | Android (Kotlin/Compose) |
+|---|---|
+| `UVMonitor/Views/` | `android/.../ui/` |
+| `UVMonitor/Models/` | `android/.../model/` |
+| `UVMonitor/Services/` | `android/.../service/` |
+| `UVMonitor/Notifications/` | `android/.../notification/` |
+| SwiftData (`@Model`) | Room (`@Entity`) |
+| BGTaskScheduler | WorkManager |
+| CoreLocation | FusedLocationProvider |
+| Swift Charts (Canvas) | Compose Canvas |
+
+## API Endpoints
+
+Both platforms consume the same APIs:
+- **ARPANSA**: `https://uvdata.arpansa.gov.au/xml/uvvalues.xml` (XML, real-time UV)
+- **Open-Meteo**: `https://api.open-meteo.com/v1/forecast` (JSON, hourly UV forecast)
 
 ## Defect Logging
 
