@@ -13,8 +13,8 @@ final class StoredForecast {
         self.pointsData = pointsData
     }
 
-    static func encode(_ points: [UVForecastPoint]) -> Data {
-        (try? JSONEncoder().encode(points)) ?? Data()
+    static func encode(_ points: [UVForecastPoint]) throws -> Data {
+        try JSONEncoder().encode(points)
     }
 
     func toUVForecast() -> UVForecast? {

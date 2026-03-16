@@ -39,64 +39,66 @@ struct ARPANSAParserTests {
     """
 
     @Test("Parses all stations from XML")
-    func parsesAllStations() {
+    func parsesAllStations() throws {
         let data = Data(sampleXML.utf8)
-        let readings = ARPANSAXMLParser.parse(data: data)
+        let readings = try ARPANSAXMLParser.parse(data: data)
         #expect(readings.count == 3)
     }
 
     @Test("Parses station name correctly")
-    func parsesStationName() {
+    func parsesStationName() throws {
         let data = Data(sampleXML.utf8)
-        let readings = ARPANSAXMLParser.parse(data: data)
+        let readings = try ARPANSAXMLParser.parse(data: data)
         #expect(readings["Sydney"]?.stationName == "Sydney")
         #expect(readings["Melbourne"]?.stationName == "Melbourne")
     }
 
     @Test("Parses UV index as Double")
-    func parsesUVIndex() {
+    func parsesUVIndex() throws {
         let data = Data(sampleXML.utf8)
-        let readings = ARPANSAXMLParser.parse(data: data)
+        let readings = try ARPANSAXMLParser.parse(data: data)
         #expect(readings["Sydney"]?.uvIndex == 6.2)
         #expect(readings["Melbourne"]?.uvIndex == 4.1)
         #expect(readings["Darwin"]?.uvIndex == 0.0)
     }
 
     @Test("Parses status field")
-    func parsesStatus() {
+    func parsesStatus() throws {
         let data = Data(sampleXML.utf8)
-        let readings = ARPANSAXMLParser.parse(data: data)
+        let readings = try ARPANSAXMLParser.parse(data: data)
         #expect(readings["Sydney"]?.status == "ok")
         #expect(readings["Darwin"]?.status == "na")
     }
 
     @Test("Parses time fields")
-    func parsesTimeFields() {
+    func parsesTimeFields() throws {
         let data = Data(sampleXML.utf8)
-        let readings = ARPANSAXMLParser.parse(data: data)
+        let readings = try ARPANSAXMLParser.parse(data: data)
         #expect(readings["Sydney"]?.localTime == "1:35 PM")
         #expect(readings["Sydney"]?.date == "5/03/2026")
         #expect(readings["Sydney"]?.utcDateTime == "2026/03/05 02:35")
     }
 
-    @Test("Returns empty for empty XML")
+    @Test("Throws for empty XML")
     func emptyXML() {
         let data = Data("<?xml version=\"1.0\"?><stations></stations>".utf8)
-        let readings = ARPANSAXMLParser.parse(data: data)
-        #expect(readings.isEmpty)
+        #expect(throws: ARPANSAXMLParser.ParseError.self) {
+            try ARPANSAXMLParser.parse(data: data)
+        }
     }
 
-    @Test("Returns empty for malformed XML")
+    @Test("Throws for malformed XML")
     func malformedXML() {
         let data = Data("not xml at all".utf8)
-        let readings = ARPANSAXMLParser.parse(data: data)
-        #expect(readings.isEmpty)
+        #expect(throws: ARPANSAXMLParser.ParseError.self) {
+            try ARPANSAXMLParser.parse(data: data)
+        }
     }
 
     @Test("Station lookup by UVStation rawValue works")
-    func stationLookup() {
+    func stationLookup() throws {
         let data = Data(sampleXML.utf8)
-        let readings = ARPANSAXMLParser.parse(data: data)
+        let readings = try ARPANSAXMLParser.parse(data: data)
         #expect(readings[UVStation.sydney.rawValue] != nil)
         #expect(readings[UVStation.melbourne.rawValue] != nil)
         #expect(readings[UVStation.perth.rawValue] == nil)

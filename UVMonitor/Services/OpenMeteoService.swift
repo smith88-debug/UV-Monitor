@@ -22,7 +22,7 @@ actor OpenMeteoService {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm"
         formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = TimeZone(identifier: response.timezone)
+        formatter.timeZone = TimeZone(identifier: response.timezone) ?? .gmt
 
         var points: [UVForecastPoint] = []
         for (timeStr, uvIndex) in zip(response.hourly.time, response.hourly.uvIndex) {

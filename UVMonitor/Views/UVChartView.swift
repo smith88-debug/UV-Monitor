@@ -17,8 +17,8 @@ struct UVChartView: View {
         var cal = Calendar.current
         cal.timeZone = stationTimeZone
         let dayStart = cal.startOfDay(for: date)
-        let start = cal.date(byAdding: .hour, value: chartStartHour, to: dayStart)!
-        let end = cal.date(byAdding: .hour, value: chartEndHour, to: dayStart)!
+        let start = cal.date(byAdding: .hour, value: chartStartHour, to: dayStart) ?? dayStart
+        let end = cal.date(byAdding: .hour, value: chartEndHour, to: dayStart) ?? dayStart.addingTimeInterval(Double(chartEndHour) * 3600)
         return start...end
     }
 

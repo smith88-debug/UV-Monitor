@@ -6,7 +6,7 @@ struct UVNotificationManager {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { _, _ in }
     }
 
-    static func scheduleProtectionAlerts(from forecast: UVForecast) {
+    static func scheduleProtectionAlerts(from forecast: UVForecast, stationTimeZone: TimeZone) {
         let center = UNUserNotificationCenter.current()
         center.removePendingNotificationRequests(withIdentifiers: ["uv-moderate", "uv-high"])
 
@@ -15,7 +15,8 @@ struct UVNotificationManager {
                 id: "uv-moderate",
                 title: "UV Rising — Apply Sunscreen",
                 body: "UV index is reaching Moderate levels. Time to apply sun protection.",
-                at: moderateTime
+                at: moderateTime,
+                timeZone: stationTimeZone
             )
         }
 
@@ -24,12 +25,13 @@ struct UVNotificationManager {
                 id: "uv-high",
                 title: "High UV — Seek Shade",
                 body: "UV index is reaching High levels. Wear sunscreen, hat, and sunglasses.",
-                at: highTime
+                at: highTime,
+                timeZone: stationTimeZone
             )
         }
     }
 
-    private static func scheduleAlert(id: String, title: String, body: String, at date: Date) {
+    private static func scheduleAlert(id: String, title: String, body: String, at date: Date, timeZone: TimeZone) {
         guard date > Date() else { return }
 
         let content = UNMutableNotificationContent()
@@ -37,7 +39,9 @@ struct UVNotificationManager {
         content.body = body
         content.sound = .default
 
-        let components = Calendar.current.dateComponents([.hour, .minute], from: date)
+        var cal = Calendar.current
+        cal.timeZone = timeZone
+        let components = cal.dateComponents([.year, .month, .day, .hour, .minute], from: date)
         let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
         let request = UNNotificationRequest(identifier: id, content: content, trigger: trigger)
 

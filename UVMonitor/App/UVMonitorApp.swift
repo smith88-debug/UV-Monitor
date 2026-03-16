@@ -36,7 +36,7 @@ struct UVMonitorApp: App {
                 }
                 .onChange(of: dataManager.forecast) {
                     if let forecast = dataManager.forecast {
-                        UVNotificationManager.scheduleProtectionAlerts(from: forecast)
+                        UVNotificationManager.scheduleProtectionAlerts(from: forecast, stationTimeZone: dataManager.selectedStation.timeZone)
                     }
                 }
         }

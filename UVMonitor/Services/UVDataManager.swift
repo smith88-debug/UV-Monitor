@@ -1,6 +1,6 @@
 import Foundation
 import SwiftData
-import Combine
+import os
 
 @MainActor
 @Observable
@@ -9,6 +9,13 @@ final class UVDataManager {
         didSet {
             UserDefaults.standard.set(selectedStation.rawValue, forKey: "selectedStation")
             resetToToday()
+            // Clear stale data from previous station before async refresh
+            currentUV = 0
+            currentLevel = .low
+            forecast = nil
+            todayReadings = []
+            displayedReadings = []
+            displayedForecast = nil
             Task { await refresh() }
         }
     }
@@ -52,6 +59,8 @@ final class UVDataManager {
         if isViewingToday { return forecast?.protectionEndTime }
         return displayedForecast?.protectionEndTime
     }
+
+    private static let logger = Logger(subsystem: "com.uvmonitor.app", category: "UVDataManager")
 
     private let arpansaService = ARPANSAService()
     private let openMeteoService = OpenMeteoService()
@@ -129,14 +138,20 @@ final class UVDataManager {
         } catch where (error as? URLError)?.code == .cancelled {
             // Expected
         } catch {
-            if errorMessage == nil {
-                errorMessage = "Forecast failed: \(error.localizedDescription)"
+            let forecastError = "Forecast failed: \(error.localizedDescription)"
+            if let existing = errorMessage {
+                errorMessage = "\(existing)\n\(forecastError)"
+            } else {
+                errorMessage = forecastError
             }
         }
     }
 
     private func storeReading(uvIndex: Double, timestamp: Date) {
-        guard let modelContext else { return }
+        guard let modelContext else {
+            Self.logger.warning("storeReading called before modelContext configured — reading not persisted")
+            return
+        }
         let reading = UVReading(
             stationId: selectedStation.rawValue,
             uvIndex: uvIndex,
@@ -147,7 +162,10 @@ final class UVDataManager {
     }
 
     private func loadTodayReadings() {
-        guard let modelContext else { return }
+        guard let modelContext else {
+            Self.logger.warning("loadTodayReadings called before modelContext configured")
+            return
+        }
         let stationId = selectedStation.rawValue
         var cal = Calendar.current
         cal.timeZone = selectedStation.timeZone
@@ -168,8 +186,11 @@ final class UVDataManager {
     }
 
     func cleanOldReadings() {
-        guard let modelContext else { return }
-        let cutoff = Calendar.current.date(byAdding: .day, value: -30, to: Calendar.current.startOfDay(for: Date()))!
+        guard let modelContext else {
+            Self.logger.warning("cleanOldReadings called before modelContext configured")
+            return
+        }
+        guard let cutoff = Calendar.current.date(byAdding: .day, value: -30, to: Calendar.current.startOfDay(for: Date())) else { return }
 
         let readingDescriptor = FetchDescriptor<UVReading>(
             predicate: #Predicate { reading in
@@ -197,14 +218,15 @@ final class UVDataManager {
     func goToPreviousDay() {
         var cal = Calendar.current
         cal.timeZone = selectedStation.timeZone
-        selectedDate = cal.date(byAdding: .day, value: -1, to: selectedDate)!
+        guard let previous = cal.date(byAdding: .day, value: -1, to: selectedDate) else { return }
+        selectedDate = previous
         loadDataForSelectedDate()
     }
 
     func goToNextDay() {
         var cal = Calendar.current
         cal.timeZone = selectedStation.timeZone
-        let next = cal.date(byAdding: .day, value: 1, to: selectedDate)!
+        guard let next = cal.date(byAdding: .day, value: 1, to: selectedDate) else { return }
         let today = cal.startOfDay(for: Date())
         selectedDate = next > today ? today : next
         loadDataForSelectedDate()
@@ -222,12 +244,15 @@ final class UVDataManager {
     }
 
     func loadDataForSelectedDate() {
-        guard let modelContext else { return }
+        guard let modelContext else {
+            Self.logger.warning("loadDataForSelectedDate called before modelContext configured")
+            return
+        }
         let stationId = selectedStation.rawValue
         var cal = Calendar.current
         cal.timeZone = selectedStation.timeZone
         let dayStart = cal.startOfDay(for: selectedDate)
-        let dayEnd = cal.date(byAdding: .day, value: 1, to: dayStart)!
+        guard let dayEnd = cal.date(byAdding: .day, value: 1, to: dayStart) else { return }
 
         // Load readings for the selected date
         let readingDescriptor = FetchDescriptor<UVReading>(
@@ -260,7 +285,11 @@ final class UVDataManager {
     }
 
     private func storeForecastIfNeeded() {
-        guard let modelContext, let forecast else { return }
+        guard let modelContext else {
+            Self.logger.warning("storeForecastIfNeeded called before modelContext configured")
+            return
+        }
+        guard let forecast else { return }
         let stationId = selectedStation.rawValue
         var cal = Calendar.current
         cal.timeZone = selectedStation.timeZone
@@ -273,12 +302,17 @@ final class UVDataManager {
         )
         if let existing = try? modelContext.fetch(descriptor), !existing.isEmpty { return }
 
-        let stored = StoredForecast(
-            stationId: stationId,
-            date: today,
-            pointsData: StoredForecast.encode(forecast.points)
-        )
-        modelContext.insert(stored)
-        try? modelContext.save()
+        do {
+            let pointsData = try StoredForecast.encode(forecast.points)
+            let stored = StoredForecast(
+                stationId: stationId,
+                date: today,
+                pointsData: pointsData
+            )
+            modelContext.insert(stored)
+            try modelContext.save()
+        } catch {
+            Self.logger.error("Failed to store forecast: \(error.localizedDescription)")
+        }
     }
 }

@@ -45,7 +45,7 @@ actor ARPANSAService {
 
     func fetchCurrentReadings() async throws -> [String: ARPANSAReading] {
         let (data, _) = try await URLSession.shared.data(from: url)
-        return ARPANSAXMLParser.parse(data: data)
+        return try ARPANSAXMLParser.parse(data: data)
     }
 
     func fetchReading(for station: UVStation) async throws -> ARPANSAReading? {
@@ -55,11 +55,29 @@ actor ARPANSAService {
 }
 
 enum ARPANSAXMLParser {
-    static func parse(data: Data) -> [String: ARPANSAReading] {
+    enum ParseError: LocalizedError {
+        case malformedXML(String)
+        case emptyResponse
+
+        var errorDescription: String? {
+            switch self {
+            case .malformedXML(let detail): "Malformed ARPANSA XML: \(detail)"
+            case .emptyResponse: "ARPANSA returned no station data"
+            }
+        }
+    }
+
+    static func parse(data: Data) throws -> [String: ARPANSAReading] {
         let delegate = ParserDelegate()
         let parser = XMLParser(data: data)
         parser.delegate = delegate
-        parser.parse()
+        guard parser.parse() else {
+            let detail = parser.parserError?.localizedDescription ?? "unknown error"
+            throw ParseError.malformedXML(detail)
+        }
+        if delegate.readings.isEmpty {
+            throw ParseError.emptyResponse
+        }
         return delegate.readings
     }
 }
